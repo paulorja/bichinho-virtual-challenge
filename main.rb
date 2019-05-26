@@ -32,15 +32,20 @@ end
 
 class Pet
 
-  attr_reader :name, :necessities
+  attr_reader :name, :necessities, :dead
 
   def initialize(pet_name)
     @name = pet_name
+    @dead = false
     @necessities = [
       Necessity.new(30, "Hunger"),
       Necessity.new(10, "Fun"),
       Necessity.new(50, "Hygiene")
     ]
+  end
+
+  def die
+    @dead = true
   end
 
 end
@@ -55,9 +60,16 @@ class Game
   end
 
   def update
+
+    sum_necessities = 0
+
     @pet.necessities.each do |n|
       n.cooldown
+      sum_necessities += n.phase
     end
+
+    @pet.die if sum_necessities == @pet.necessities.size * 4
+
   end
 
   def draw
@@ -69,6 +81,10 @@ class Game
     end
     puts necessities_line
 
+    if @pet.dead
+      puts "The pet died."
+    end
+
   end
 
   def gameloop
@@ -77,7 +93,7 @@ class Game
     update
     draw
 
-    sleep 1
+    sleep 0.1
 
     gameloop
   end
