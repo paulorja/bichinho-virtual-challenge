@@ -1,22 +1,40 @@
 
 
-def update
+class Game
+
+  def start
+    puts "Type pet name:"
+    @pet_name = gets
+    gameloop
+  end
+
+  def update
+
+  end
+
+  def draw
+    puts "Pet: #{@pet_name}"
+    puts '###############################'
+    puts '#     ####### #################'
+    puts '####  ######  #################'
+    puts '#### ######  ##################'
+    puts '#####       ###################'
+    puts '###############################'
+  end
+
+  def gameloop
+    system("clear")
+
+    update
+    draw
+
+    sleep 1
+
+    gameloop
+  end
 
 end
 
-def draw
 
-end
-
-def gameloop
-
-  update
-  draw
-
-  system("clear")
-  sleep 1
-
-  gameloop
-end
-
-gameloop
+game = Game.new
+game.start
