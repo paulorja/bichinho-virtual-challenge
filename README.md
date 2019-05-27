@@ -1,4 +1,16 @@
-### Spec
+## Dependencies
+* ruby 2.6+
+
+## Run 
+```shell
+./start.sh
+```	
+
+## Obs
+* Não coloquei em docker porque usei ferramentas de terminal interativo e não funciou rodando com o docker-compose mesmo ativando tty
+* Não travei a versão do ruby para simplificar na hora de rodar, funciona com qualquer versão das mais novas (usei a 2.6.1)
+
+## Spec
 
 ```
 Criar um "bichinho virtual" com as seguintes propriedades:
