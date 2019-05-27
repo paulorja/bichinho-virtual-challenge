@@ -157,7 +157,6 @@ class Game
     puts "Tempo de vida: #{@pet.lifetime}"
     puts @pet.necessities.draw
 
-
     if @pet.dead
       puts "O bichinho morreu."
     else
@@ -173,7 +172,7 @@ class Game
 
     unless @pet.dead
       begin
-        Timeout.timeout 0.1 do
+        Timeout.timeout 1 do
           option = $stdin.getch
           case option
           when "0"
