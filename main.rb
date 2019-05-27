@@ -1,6 +1,5 @@
 # coding: utf-8
 require 'io/console'
-require 'byebug'
 require 'timeout'
 
 
@@ -11,25 +10,24 @@ class Necessity
   def initialize(time, name)
     @phase = 0
     @time = time
-    @cooldown = time
+    @cooldown = Time.now.to_i
     @name = name
   end
 
   def cooldown
-    @cooldown -= 1
-    if @cooldown == 0
+    if @cooldown + @time <= Time.now.to_i
       up
-      @cooldown = @time
+      @cooldown = Time.now.to_i
     end
   end
 
   def up
-    @cooldown = @time
+    @cooldown = Time.now.to_i
     @phase += 1 if @phase < 4
   end
 
   def down
-    @cooldown = @time
+    @cooldown = Time.now.to_i
     @phase -= 1 if @phase > 0
   end
 
@@ -38,11 +36,12 @@ end
 
 class Pet
 
-  attr_reader :name, :necessities, :dead, :lifetime
+  attr_reader :name, :necessities, :dead
 
   def initialize(pet_name)
-    @lifetime = 0
+    @start_time = Time.now.to_i
     @message = nil
+    @message_time = 0
     @name = pet_name
     @dead = false
     @necessities = [
@@ -57,33 +56,35 @@ class Pet
   end
 
   def alimentar
-    @message = "Alimentando... +1 fome"
+    set_message "Alimentando..."
     4.times { @necessities[0].down }
     1.times { @necessities[2].up }
-    @message
   end
 
   def banho
-    @message = "Tomando banho... +1 banho"
+    set_message "Tomando banho..."
     4.times { @necessities[2].down }
-    @message
   end
 
   def brincar
-    @message = "Brincando... +1 diversao"
+    set_message "Brincando..."
     4.times { @necessities[1].down }
     1.times { @necessities[2].up }
-    @message
+  end
+
+  def set_message(msg)
+    @message = msg
+    @message_time = Time.now.to_i
   end
 
   def get_message
-    m = @message
-    @message = nil
-    return m
+    if @message_time + 2 > Time.now.to_i
+      return @message
+    end
   end
 
-  def increment_lifetime
-    @lifetime += 1
+  def lifetime
+    Time.now.to_i - @start_time
   end
 
 end
@@ -100,8 +101,6 @@ class Game
 
   def update
 
-    @pet.increment_lifetime
-
     sum_necessities = 0
 
     @pet.necessities.each do |n|
@@ -115,7 +114,6 @@ class Game
 
   def draw
     system("clear")
-
 
     puts "Bichinho: #{@pet.name}"
     puts "Tempo de vida: #{@pet.lifetime}"
@@ -141,29 +139,23 @@ class Game
     draw
 
     unless @pet.dead
-      m = ""
       begin
-        frame_time = Time.now.to_f
-        Timeout.timeout 1 do
+        Timeout.timeout 0.1 do
           option = $stdin.getch
           case option
           when "0"
             exit!
           when "1"
-            m = @pet.alimentar
+            @pet.alimentar
           when "2"
-            m = @pet.brincar
+            @pet.brincar
           when "3"
-            m = @pet.banho
+            @pet.banho
           end
         end
+      rescue
+        puts "-"
       ensure
-        diff = Time.now.to_f - frame_time
-        if diff < 1
-          puts m
-          puts "Aguarde.."
-          sleep diff
-        end
         gameloop
       end
     end
@@ -174,4 +166,3 @@ end
 
 game = Game.new
 game.start
-
