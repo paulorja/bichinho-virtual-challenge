@@ -24,11 +24,12 @@ class Necessity
   end
 
   def up
+    @cooldown = @time
     @phase += 1 if @phase < 4
-
   end
 
   def down
+    @cooldown = @time
     @phase -= 1 if @phase > 0
   end
 
@@ -37,9 +38,10 @@ end
 
 class Pet
 
-  attr_reader :name, :necessities, :dead
+  attr_reader :name, :necessities, :dead, :lifetime
 
   def initialize(pet_name)
+    @lifetime = 0
     @message = nil
     @name = pet_name
     @dead = false
@@ -56,16 +58,21 @@ class Pet
 
   def alimentar
     @message = "Alimentando... +1 fome"
+    4.times { @necessities[0].down }
+    1.times { @necessities[2].up }
     @message
   end
 
   def banho
     @message = "Tomando banho... +1 banho"
+    4.times { @necessities[2].down }
     @message
   end
 
   def brincar
     @message = "Brincando... +1 diversao"
+    4.times { @necessities[1].down }
+    1.times { @necessities[2].up }
     @message
   end
 
@@ -73,6 +80,10 @@ class Pet
     m = @message
     @message = nil
     return m
+  end
+
+  def increment_lifetime
+    @lifetime += 1
   end
 
 end
@@ -88,6 +99,8 @@ class Game
   end
 
   def update
+
+    @pet.increment_lifetime
 
     sum_necessities = 0
 
@@ -105,6 +118,7 @@ class Game
 
 
     puts "Bichinho: #{@pet.name}"
+    puts "Tempo de vida: #{@pet.lifetime}"
 
     necessities_line = ""
     @pet.necessities.each do |n|
@@ -126,30 +140,32 @@ class Game
     update
     draw
 
-    m = ""
-    begin
-      frame_time = Time.now.to_f
-      Timeout.timeout 1 do
-        option = $stdin.getch
-        case option
-        when "0"
-          exit!
-        when "1"
-          m = @pet.alimentar
-        when "2"
-          m = @pet.brincar
-        when "3"
-          m = @pet.banho
+    unless @pet.dead
+      m = ""
+      begin
+        frame_time = Time.now.to_f
+        Timeout.timeout 1 do
+          option = $stdin.getch
+          case option
+          when "0"
+            exit!
+          when "1"
+            m = @pet.alimentar
+          when "2"
+            m = @pet.brincar
+          when "3"
+            m = @pet.banho
+          end
         end
+      ensure
+        diff = Time.now.to_f - frame_time
+        if diff < 1
+          puts m
+          puts "Aguarde.."
+          sleep diff
+        end
+        gameloop
       end
-    ensure
-      diff = Time.now.to_f - frame_time
-      if diff < 1
-        puts m
-        puts "Aguarde.."
-        sleep diff
-      end
-      gameloop
     end
 
   end
