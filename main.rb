@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'io/console'
 require 'byebug'
 require 'timeout'
@@ -17,7 +18,6 @@ class Necessity
   def cooldown
     @cooldown -= 1
     if @cooldown == 0
-      puts "#{name} subiu um ponto"
       up
       @cooldown = @time
     end
@@ -44,9 +44,9 @@ class Pet
     @name = pet_name
     @dead = false
     @necessities = [
-      Necessity.new(30, "Hunger"),
-      Necessity.new(10, "Fun"),
-      Necessity.new(50, "Hygiene")
+      Necessity.new(30, "Fome"),
+      Necessity.new(10, "Diversão"),
+      Necessity.new(50, "Higiêne")
     ]
   end
 
@@ -56,14 +56,17 @@ class Pet
 
   def alimentar
     @message = "Alimentando... +1 fome"
+    @message
   end
 
   def banho
     @message = "Tomando banho... +1 banho"
+    @message
   end
 
   def brincar
     @message = "Brincando... +1 diversao"
+    @message
   end
 
   def get_message
@@ -101,7 +104,7 @@ class Game
     system("clear")
 
 
-    puts "Pet: #{@pet.name}"
+    puts "Bichinho: #{@pet.name}"
 
     necessities_line = ""
     @pet.necessities.each do |n|
@@ -111,7 +114,7 @@ class Game
 
 
     if @pet.dead
-      puts "The pet died."
+      puts "O bichinho morreu."
     else
       puts "1 - Alimentar \n2 - Brincar \n3 - Dar banho\n0 - Sair"
       puts @pet.get_message
@@ -123,23 +126,29 @@ class Game
     update
     draw
 
+    m = ""
     begin
-      Timeout.timeout 0.3 do
+      frame_time = Time.now.to_f
+      Timeout.timeout 1 do
         option = $stdin.getch
         case option
         when "0"
-          exit
+          exit!
         when "1"
-          @pet.alimentar
+          m = @pet.alimentar
         when "2"
-          @pet.brincar
+          m = @pet.brincar
         when "3"
-          @pet.banho
+          m = @pet.banho
         end
-        gameloop
       end
-    rescue
-      sleep 0.3
+    ensure
+      diff = Time.now.to_f - frame_time
+      if diff < 1
+        puts m
+        puts "Aguarde.."
+        sleep diff
+      end
       gameloop
     end
 
