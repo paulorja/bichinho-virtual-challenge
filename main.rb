@@ -5,30 +5,78 @@ require 'timeout'
 
 class Necessity
 
-  attr_reader :name, :phase
+  attr_reader :name, :phase, :message, :message_time
 
   def initialize(time, name)
     @phase = 0
     @time = time
     @cooldown = Time.now.to_i
     @name = name
+    @message = ""
+    @message_time = 0
   end
 
-  def cooldown
+  def cooldown(doubled_increment)
     if @cooldown + @time <= Time.now.to_i
       up
+      up if doubled_increment
       @cooldown = Time.now.to_i
     end
   end
 
   def up
     @cooldown = Time.now.to_i
-    @phase += 1 if @phase < 4
+    if @phase < 4
+      @phase += 1
+      @message = "+"
+      @message_time = Time.now.to_i + 2
+    end
   end
 
   def down
     @cooldown = Time.now.to_i
-    @phase -= 1 if @phase > 0
+    if @phase > 0
+      @phase -= 1
+      @message = "-"
+      @message_time = Time.now.to_i + 2
+    end
+  end
+
+  def get_message
+    return @message if @message_time > Time.now.to_i
+  end
+
+end
+
+
+class Necessities
+
+  attr_accessor :fome, :diversao, :higiene
+
+  def initialize
+    @fome = Necessity.new(30, "Fome")
+    @diversao = Necessity.new(10, "Diversão")
+    @higiene = Necessity.new(50, "Higiêne")
+  end
+
+  def doubled_increment
+    return true if @fome.phase == 4 or @diversao.phase == 4 or @higiene.phase == 4
+  end
+
+  def sum
+    @fome.phase + @diversao.phase + @higiene.phase
+  end
+
+  def draw
+    line = ""
+    all.each do |n|
+      line += "#{n.name}: #{n.phase}#{n.get_message}  "
+    end
+    line
+  end
+
+  def all
+    [@fome, @diversao, @higiene]
   end
 
 end
@@ -44,11 +92,7 @@ class Pet
     @message_time = 0
     @name = pet_name
     @dead = false
-    @necessities = [
-      Necessity.new(30, "Fome"),
-      Necessity.new(10, "Diversão"),
-      Necessity.new(50, "Higiêne")
-    ]
+    @necessities = Necessities.new
   end
 
   def die
@@ -57,19 +101,19 @@ class Pet
 
   def alimentar
     set_message "Alimentando..."
-    4.times { @necessities[0].down }
-    1.times { @necessities[2].up }
+    4.times { @necessities.fome.down }
+    1.times { @necessities.higiene.up }
   end
 
   def banho
     set_message "Tomando banho..."
-    4.times { @necessities[2].down }
+    4.times { @necessities.higiene.down }
   end
 
   def brincar
     set_message "Brincando..."
-    4.times { @necessities[1].down }
-    1.times { @necessities[2].up }
+    4.times { @necessities.diversao.down }
+    1.times { @necessities.higiene.up }
   end
 
   def set_message(msg)
@@ -93,23 +137,17 @@ end
 class Game
 
   def start
-    puts "Type pet name:"
+    puts "Digite um nome para o bichinho:"
     @pet = Pet.new(gets)
     @input = nil
     gameloop
   end
 
   def update
-
-    sum_necessities = 0
-
-    @pet.necessities.each do |n|
-      n.cooldown
-      sum_necessities += n.phase
+    @pet.necessities.all.each do |n|
+      n.cooldown(@pet.necessities.doubled_increment)
     end
-
-    @pet.die if sum_necessities == @pet.necessities.size * 4
-
+    @pet.die if @pet.necessities.sum == 12
   end
 
   def draw
@@ -117,12 +155,7 @@ class Game
 
     puts "Bichinho: #{@pet.name}"
     puts "Tempo de vida: #{@pet.lifetime}"
-
-    necessities_line = ""
-    @pet.necessities.each do |n|
-      necessities_line += "#{n.name}: #{n.phase}  "
-    end
-    puts necessities_line
+    puts @pet.necessities.draw
 
 
     if @pet.dead
